@@ -1,0 +1,4 @@
+import { useEffect, useState } from "react";
+
+const steps = [["Preparing payment...", 700], ["Checking with Finance...", 850], ["Checking with Legal...", 850], ["Escalating for approval...", 950], ["Reviewing compensation policies...", 1100]] as const;
+export function ProcessingScreen({ onComplete }: { onComplete: () => void }) { const [index, setIndex] = useState(0); useEffect(() => { let timer: number; const advance = () => { if (index === steps.length - 1) timer = window.setTimeout(onComplete, steps[index][1]); else timer = window.setTimeout(() => setIndex((value) => value + 1), steps[index][1]); }; advance(); return () => window.clearTimeout(timer); }, [index, onComplete]); return <section className="center-screen" aria-live="polite"><svg className="processing-spinner" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" /></svg><p className="processing-message">{steps[index][0]}</p></section>; }

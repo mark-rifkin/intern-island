@@ -1,0 +1,4 @@
+import { useEffect, useRef } from "react";
+import { formatCurrency } from "../utils/currency";
+import { getDeclineMessage } from "../utils/declineCopy";
+export function DeclineScreen({ totalCents, onTryAgain, onAppreciate }: { totalCents: number; onTryAgain: () => void; onAppreciate: () => void }) { const heading = useRef<HTMLHeadingElement>(null); useEffect(() => heading.current?.focus(), []); return <section className="center-screen decline-screen"><div className="decline-icon" aria-hidden="true">&#10005;</div><h1 tabIndex={-1} ref={heading}>Transaction declined</h1><p>{getDeclineMessage(totalCents)}</p><div className="decline-actions"><button className="primary-button" onClick={onTryAgain}>Try again</button><button className="secondary-button" onClick={onAppreciate}>Pay with appreciation</button></div><small>Attempted amount: {formatCurrency(totalCents)}</small></section>; }
