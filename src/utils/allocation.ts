@@ -17,38 +17,48 @@ export function getAllocationStepCents(totalCents: number): number {
 
 export function updateAllocation(allocations: number[], changedIndex: number, requestedValueCents: number, totalCents: number): number[] {
   if (changedIndex < 0 || changedIndex >= allocations.length) return [...allocations];
-  const result = [...allocations];
   const next = Math.max(0, Math.min(requestedValueCents, totalCents));
-  const delta = next - result[changedIndex];
+  const result = [...allocations];
+  const oldValue = result[changedIndex];
+  const delta = next - oldValue;
+
   if (delta === 0) return result;
-  const others = result.map((_, index) => index).filter((index) => index !== changedIndex);
+
+  const otherIndexes = result
+    .map((_, index) => index)
+    .filter((index) => index !== changedIndex);
+
   if (delta > 0) {
     let remaining = delta;
-    let eligible = others.filter((index) => result[index] > 0);
-    while (remaining > 0 && eligible.length) {
-      const share = Math.floor(remaining / eligible.length);
+    let eligible = otherIndexes.filter((index) => result[index] > 0);
+
+    while (remaining > 0 && eligible.length > 0) {
+      const baseShare = Math.floor(remaining / eligible.length);
       const remainder = remaining % eligible.length;
-      let removed = 0;
+      let removedThisRound = 0;
+
       eligible.forEach((index, position) => {
-        const amount = Math.min(result[index], share + (position < remainder ? 1 : 0));
-        result[index] -= amount;
-        removed += amount;
+        const desiredRemoval =
+          baseShare + (position < remainder ? 1 : 0);
+        const actualRemoval = Math.min(desiredRemoval, result[index]);
+        result[index] -= actualRemoval;
+        removedThisRound += actualRemoval;
       });
-      if (!removed) break;
-      remaining -= removed;
+
+      if (removedThisRound === 0) break;
+      remaining -= removedThisRound;
       eligible = eligible.filter((index) => result[index] > 0);
     }
   } else {
     const released = -delta;
-    const share = Math.floor(released / others.length);
-    const remainder = released % others.length;
-    others.forEach((index, position) => { result[index] += share + (position < remainder ? 1 : 0); });
+    const baseShare = Math.floor(released / otherIndexes.length);
+    const remainder = released % otherIndexes.length;
+
+    otherIndexes.forEach((index, position) => {
+      result[index] += baseShare + (position < remainder ? 1 : 0);
+    });
   }
+
   result[changedIndex] = next;
-  const difference = totalCents - result.reduce((sum, value) => sum + value, 0);
-  if (difference) {
-    const target = difference > 0 ? others.find((index) => index !== changedIndex) : others.find((index) => result[index] >= -difference);
-    if (target !== undefined) result[target] += difference;
-  }
   return result;
 }
